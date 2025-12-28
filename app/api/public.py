@@ -5,13 +5,11 @@ import json
 from typing import Optional
 
 from fastapi import APIRouter, Query, HTTPException
-from sqlalchemy import select, desc, and_
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, desc
 from sqlalchemy.orm import joinedload
 
 from app.core.config import settings
 from app.models import Article, Feed
-from app.core.db import get_db
 
 router = APIRouter(prefix="/v1", tags=["public"])
 
@@ -36,11 +34,7 @@ def _preview(markdown: str, max_words: int) -> str:
 async def list_articles(
     limit: int = Query(default=20, ge=1, le=50),
     cursor: Optional[str] = Query(default=None),
-    db: AsyncSession = Query(default=None, include_in_schema=False),
 ):
-    # FastAPI can't inject db via Query; do dependency manually
-    # (workaround for Pydantic v2 schema clarity)
-    # We'll open session here:
     from app.core.db import SessionLocal
     async with SessionLocal() as session:
         stmt = (
